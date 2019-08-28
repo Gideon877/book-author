@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 'use strict';
 
 beforeAll(() => {
@@ -5,6 +6,6 @@ beforeAll(() => {
 });
 
 test('Blank Test', () => {
-    expect(true).toBeTruthy()
+    expect(true).toBeTruthy();
 });
 
