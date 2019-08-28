@@ -7,7 +7,6 @@ module.exports = function(sequelize, DataTypes) {
     authorId: {
       type: DataTypes.TEXT,
       allowNull: false,
-      autoIncrement: true,
       primaryKey: true
     },
     firstName: {

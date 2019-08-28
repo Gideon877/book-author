@@ -3,7 +3,6 @@ module.exports = function (sequelize, DataTypes) {
     categoryId: {
       type: DataTypes.TEXT,
       allowNull: false,
-      autoIncrement: true,
       primaryKey: true
     },
     name: {

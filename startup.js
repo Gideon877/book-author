@@ -8,14 +8,14 @@ const { Client } = require('pg');
 const client = new Client({
   password: "postgres",
   user: "postgres",
-  host: "postgres",
+  host: "devtest.cm4z5hf5dtlv.eu-west-1.rds.amazonaws.com",
 });
 
 const createDB = async () => { //ifnotex
   await client.connect();
   try {
-    log.info({}, "Trying to create database");
-    await client.query('CREATE DATABASE library;');
+    log.info({}, "Trying to create database if it does not exist");
+    await client.query('CREATE DATABASE impactDB;');
   } catch (e) {
     log.info({}, "DATABASE EXISTS");
     return Promise.resolve();
@@ -26,7 +26,7 @@ const createDB = async () => { //ifnotex
 
 const syncTables = async (cleanStart) => {
   log.info({}, 'SYNCING TABLES');
-  await createDB();
+  // await createDB();
   return sequelize.sync({ force: cleanStart }).then(log.info('Tables are synced')).catch(error => log.error({ error }, 'Error Syncing Tables'))
 }
 

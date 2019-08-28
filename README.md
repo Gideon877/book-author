@@ -1,6 +1,6 @@
 # book-library-service
 
-[![Build Status](https://travis-ci.org/<insert-project>?branch=master)](https://travis-ci.org/<username>/<project>)
+[![Build Status](https://travis-ci.org/Gideon877/book-author.svg?branch=master)](https://travis-ci.org/Gideon877/book-author)
 
 Description
 
