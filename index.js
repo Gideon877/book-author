@@ -2,6 +2,8 @@ const express = require('express');
 const bunyan = require('bunyan');
 const app = express();
 var bodyParser = require('body-parser');
+const cors = require('cors');
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const log = bunyan.createLogger({ name: 'book-library-service' });
