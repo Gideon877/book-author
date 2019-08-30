@@ -3,7 +3,9 @@ const _ = require('lodash');
 const uuid = require('uuid');
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({ name: 'book-library-service' });
-
+const bcrypt = require('bcrypt');
+const BCryptRounds = 6;
+const jwt = require('jsonwebtoken');
 
 module.exports = function (User) {
 
@@ -13,16 +15,21 @@ module.exports = function (User) {
       if (_.isEmpty(username) || _.isEmpty(password)) {
         throw new Error('Fields can\'t be empty!');
       }
+      const accessGranted = await canLogin({ password, username });
+      if (!accessGranted) {
+        throw new Error(`Access denied for username '${username}'!`);
+      }
+      
       let user = await User.findOne({
-        where: { username, password }
+        where: { username }
       });
 
-      (_.isEmpty(user)) ?
-        res.status(500).send('User not found') :
-        res.status(200).send({
-          message: 'Authentication successful',
-          user
-        });
+      // add auth token to headers
+
+      res.status(200).send({
+        message: 'Authentication granted',
+        user
+      });
     } catch (e) {
       log.warn(e);
       res.status(500).send(`Error occurred: ${e.message}`);
@@ -31,21 +38,22 @@ module.exports = function (User) {
 
   const signUp = async (req, res) => {
     try {
-      let { username } = req.body;
+      let { username, password } = req.body;
+      password = await HashPassword(password);
       let data = {
         username,
         userId: uuid.v4(),
         email: req.body.email,
         firstName: req.body.firstName,
         surname: req.body.surname,
-        password: req.body.password
+        password
       };
 
       let [user, created] = await User.findOrCreate({
         where: { username }, defaults: data
       });
 
-      if (_.isEmpty(created)) {
+      if (!created) {
         throw new Error('User already exists');
       }
 
@@ -60,8 +68,85 @@ module.exports = function (User) {
     }
   };
 
+  /**
+ * @param  {String} password
+ */
+  const HashPassword = param => {
+    const password = _.isString(param) ? param : param.toString();
+    return bcrypt
+      .genSalt(BCryptRounds)
+      .then(salt => {
+        return bcrypt.hash(password, salt).then(result => {
+          return result;
+        });
+      })
+      .catch(err => {
+        return err;
+      });
+  };
+
+  /**
+ * @param  {Object} param
+ * @param  {String} param.password
+ * @param  {Object} param.user
+ * @param  {String} param.user.password
+ */
+  const DecryptPassword = param => {
+    let { password, user } = param || {};
+    return bcrypt
+      .compare(password, user.password)
+      .then(result => {
+        return result;
+      })
+      .catch(err => {
+        return err;
+      });
+  };
+
+  /**
+     * @param  {Object} param
+     * @param  {Object} param.password
+     * @param  {Object} param.username
+     * 
+     * @returns {Boolean}
+     */
+  const canLogin = async (param) => {
+    if (_.isEmpty(param) || !param) return false;
+    if (!param.password || !param.username) return false;
+    const { password, username } = param;
+    return getUserByUsername(username)
+      .then(async (user) => (user)
+        ? await DecryptPassword({ password, user })
+        : false);
+  };
+
+  const getUserByUsername = (username) => {
+    return User.findOne({ where: { username } });
+  };
+
+  /**
+ * @returns {Boolean}
+ */
+  function getToken() {
+    return jwt.sign({ name: 'token' }, 'secret', { expiresIn: '1h'});
+  }
+
+  /**
+* @param {String} token
+* @returns {Boolean}
+*/
+  function verifyToken(token) {
+    const tokenValue = token.split(' ');
+    if(tokenValue.length > 1) {
+      token = tokenValue[1];
+    }
+    return jwt.verify(token, 'secret');
+  }
+
   return {
     signIn,
-    signUp
+    signUp,
+    getToken,
+    verifyToken
   };
 };

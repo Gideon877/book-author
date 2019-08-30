@@ -3,12 +3,16 @@ const _ = require('lodash');
 const uuid = require('uuid');
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({ name: 'book-library-service' });
+const {User} = require('../postgres/models');
+const Auth = require('./auth');
 
 module.exports = function (Category) {
-
+  const Authenticate = Auth(User);
 
   const findCategories = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const category = await Category.findAll().then((results) => results).catch(() => []);
       res.status(200).send({
         message: 'found category',
@@ -21,14 +25,16 @@ module.exports = function (Category) {
   };
 
   const addCategory = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       let { name, description } = req.body;
       let data = { name, categoryId: uuid.v4(), description };
       let [category, created] = await Category.findOrCreate({
         where: { name }, defaults: data
       });
 
-      if (_.isEmpty(created)) throw new Error('Failed to add category');
+      if (!created) throw new Error('Failed to add category');
 
       res.status(200).send({
         message: `created category name: ${name}`,
@@ -42,7 +48,9 @@ module.exports = function (Category) {
   };
 
   const updateCategory = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const { id } = req.params;
       const { name, description } = req.body;
       let result = await Category.findOne({
@@ -65,7 +73,9 @@ module.exports = function (Category) {
   };
 
   const getCategory = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const { id } = req.params;
       const category = await Category.findOne({
         where: {
@@ -83,7 +93,9 @@ module.exports = function (Category) {
   };
 
   const removeCategory = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const { id } = req.params;
       Category.findOne({
         where: { categoryId: id }

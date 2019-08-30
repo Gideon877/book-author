@@ -3,11 +3,16 @@ const _ = require('lodash');
 const uuid = require('uuid');
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({ name: 'book-library-service' });
+const {User} = require('../postgres/models');
+const Auth = require('./auth');
 
 module.exports = function (Book) {
+  const Authenticate = Auth(User);
 
   const findBooks = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const books = await Book.findAll().then((results) => results).catch(() => []);
       res.status(200).send({
         message: 'found books',
@@ -20,7 +25,9 @@ module.exports = function (Book) {
   };
 
   const addBook = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       let { name, category, authorId } = req.body;
       let data = { bookId: uuid.v4(), name, category, authorId };
       let [book, created] = await Book.findOrCreate({
@@ -41,7 +48,9 @@ module.exports = function (Book) {
   };
 
   const updateBook = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const { id } = req.params;
       const { name, category } = req.body;
       let result = await Book.findOne({
@@ -64,7 +73,9 @@ module.exports = function (Book) {
   };
 
   const removeBook = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const { id } = req.params;
       await Book.findOne({
         where: { bookId: id }
@@ -80,7 +91,9 @@ module.exports = function (Book) {
   };
 
   const getBook = async (req, res) => {
+    const token = req.headers['x-access-token'] || req.headers['authorization'];
     try {
+      await Authenticate.verifyToken(token);
       const { id } = req.params;
       const book = await Book.findOne({
         where: {
