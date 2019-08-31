@@ -23,16 +23,15 @@ module.exports = function (User) {
       let user = await User.findOne({
         where: { username }
       });
+      const token = await getToken();
 
-      // add auth token to headers
-
-      res.status(200).send({
+      res.status(200).header('x-auth-token', token).send({
         message: 'Authentication granted',
         user
       });
     } catch (e) {
       log.warn(e);
-      res.status(500).send(`Error occurred: ${e.message}`);
+      res.status(500).send(e);
     }
   };
 
@@ -44,8 +43,8 @@ module.exports = function (User) {
         username,
         userId: uuid.v4(),
         email: req.body.email,
-        firstName: req.body.firstName,
-        surname: req.body.surname,
+        firstName: _.capitalize(req.body.firstName),
+        surname: _.capitalize(req.body.surname),
         password
       };
 
@@ -64,7 +63,7 @@ module.exports = function (User) {
 
     } catch (error) {
       // log.warn(error)
-      res.status(500).send(`Error occurred:${error}`);
+      res.status(500).send(error);
     }
   };
 
@@ -136,6 +135,7 @@ module.exports = function (User) {
 * @returns {Boolean}
 */
   function verifyToken(token) {
+    if(_.isEmpty(token)) throw new Error('Token not provided');
     const tokenValue = token.split(' ');
     if(tokenValue.length > 1) {
       token = tokenValue[1];

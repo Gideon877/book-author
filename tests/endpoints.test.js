@@ -7,7 +7,9 @@ beforeAll(() => {
 });
 
 test('Blank Test', () => {
-    let token = getToken();
+    let token = getToken();   
+    // console.log(token);
+     
     let result = verifyToken(token);
     expect(result.name).toBe('token');
     expect(true).toBeTruthy();
@@ -17,7 +19,7 @@ test('Blank Test', () => {
  * @returns {Boolean}
  */
 function getToken() {
-    return jwt.sign({ name: 'token' }, 'secret', { expiresIn: '1h'});
+    return jwt.sign({ name: 'token' }, 'secret', { expiresIn: '1d'});
 }
 
 /**

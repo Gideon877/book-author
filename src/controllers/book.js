@@ -11,9 +11,12 @@ module.exports = function (Book) {
 
   const findBooks = async (req, res) => {
     const token = req.headers['x-access-token'] || req.headers['authorization'];
+    const [page, pageSize ] = [ 1, 5]; //[req.query.page, req.query.pageSize] ||;    
+    const offset = page * pageSize;
+    const limit = offset + pageSize;
     try {
       await Authenticate.verifyToken(token);
-      const books = await Book.findAll().then((results) => results).catch(() => []);
+      const books = await Book.findAll({limit, offset}).then((results) => results).catch(() => []);
       res.status(200).send({
         message: 'found books',
         books
@@ -29,6 +32,8 @@ module.exports = function (Book) {
     try {
       await Authenticate.verifyToken(token);
       let { name, category, authorId } = req.body;
+      name = _.capitalize(name);
+      category = _.capitalize(category);
       let data = { bookId: uuid.v4(), name, category, authorId };
       let [book, created] = await Book.findOrCreate({
         where: { name, authorId }, defaults: data
@@ -108,8 +113,16 @@ module.exports = function (Book) {
     }
   };
 
+  const getBookByCategory = async (category) => {
+    return Book.findOne({where: { category }});
+  };
+
+  const getBookByAuthorId = async (authorId) => {
+    return Book.findOne({where: { authorId }});
+  };
+
   return {
-    findBooks,
+    findBooks, getBookByCategory, getBookByAuthorId,
     addBook, updateBook, getBook, removeBook
   };
 };
