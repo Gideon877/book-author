@@ -3,20 +3,18 @@ const _ = require('lodash');
 const uuid = require('uuid');
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({ name: 'book-library-service' });
-const {User} = require('../postgres/models');
+const { User } = require('../postgres/models');
 const Auth = require('./auth');
 
 module.exports = function (Book) {
   const Authenticate = Auth(User);
 
   const findBooks = async (req, res) => {
-    const token = req.headers['x-access-token'] || req.headers['authorization'];
-    const [page, pageSize ] = [ 1, 5]; //[req.query.page, req.query.pageSize] ||;    
-    const offset = page * pageSize;
-    const limit = offset + pageSize;
+    const token = req.headers['x-access-token'] || req.headers['authorization'];  
     try {
       await Authenticate.verifyToken(token);
-      const books = await Book.findAll({limit, offset}).then((results) => results).catch(() => []);
+      const books = await Book.findAll().then((results) => results).catch(() => []);
+      
       res.status(200).send({
         message: 'found books',
         books
@@ -48,7 +46,7 @@ module.exports = function (Book) {
 
     } catch (error) {
       log.warn({ error });
-      res.status(500).send(error);
+      res.status(500).send(error.message);
     }
   };
 
@@ -85,7 +83,7 @@ module.exports = function (Book) {
       await Book.findOne({
         where: { bookId: id }
       }).then(async (book) => {
-        await book.destroy({ force: true }).then();
+        await book.destroy({ force: true }).then(() => res.status(200).send({ book: {}, message: 'book deleted', }));
       }).catch((err) => {
         throw new Error(err);
       });
@@ -114,11 +112,11 @@ module.exports = function (Book) {
   };
 
   const getBookByCategory = async (category) => {
-    return Book.findOne({where: { category }});
+    return Book.findOne({ where: { category } });
   };
 
   const getBookByAuthorId = async (authorId) => {
-    return Book.findOne({where: { authorId }});
+    return Book.findOne({ where: { authorId } });
   };
 
   return {

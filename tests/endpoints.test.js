@@ -8,8 +8,6 @@ beforeAll(() => {
 
 test('Blank Test', () => {
     let token = getToken();   
-    // console.log(token);
-     
     let result = verifyToken(token);
     expect(result.name).toBe('token');
     expect(true).toBeTruthy();

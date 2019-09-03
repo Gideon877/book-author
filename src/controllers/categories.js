@@ -10,16 +10,12 @@ const BookApi = require('./book');
 module.exports = function (Category) {
   const Authenticate = Auth(User);
   const Books = BookApi(Book);
-
+  
   const findCategories = async (req, res) => {
     const token = req.headers['x-access-token'] || req.headers['authorization'];
-    // console.log(req.query);
-    const [page, pageSize ] = [ 1, 5]; //[req.query.page, req.query.pageSize] ||;    
-    const offset = page * pageSize;
-    const limit = offset + pageSize;
     try {
       await Authenticate.verifyToken(token);
-      const category = await Category.findAll({limit, offset})
+      const category = await Category.findAll()
         .then((results) => results)
         .catch(() => []);
 

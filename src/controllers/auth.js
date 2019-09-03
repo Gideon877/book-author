@@ -19,19 +19,18 @@ module.exports = function (User) {
       if (!accessGranted) {
         throw new Error(`Access denied for username '${username}'!`);
       }
-      
+
       let user = await User.findOne({
         where: { username }
       });
       const token = await getToken();
-
-      res.status(200).header('x-auth-token', token).send({
+      res.status(200).header('authorization', token).send({
         message: 'Authentication granted',
-        user
+        user, token
       });
     } catch (e) {
       log.warn(e);
-      res.status(500).send(e);
+      res.status(500).send(e.message);
     }
   };
 
@@ -63,7 +62,7 @@ module.exports = function (User) {
 
     } catch (error) {
       // log.warn(error)
-      res.status(500).send(error);
+      res.status(500).send(error.message);
     }
   };
 
@@ -127,7 +126,7 @@ module.exports = function (User) {
  * @returns {Boolean}
  */
   function getToken() {
-    return jwt.sign({ name: 'token' }, 'secret', { expiresIn: '1h'});
+    return jwt.sign({ name: 'token' }, 'secret', { expiresIn: '1h' });
   }
 
   /**
@@ -135,9 +134,9 @@ module.exports = function (User) {
 * @returns {Boolean}
 */
   function verifyToken(token) {
-    if(_.isEmpty(token)) throw new Error('Token not provided');
+    if (_.isEmpty(token)) throw new Error('Token not provided');
     const tokenValue = token.split(' ');
-    if(tokenValue.length > 1) {
+    if (tokenValue.length > 1) {
       token = tokenValue[1];
     }
     return jwt.verify(token, 'secret');

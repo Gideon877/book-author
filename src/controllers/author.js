@@ -13,12 +13,12 @@ module.exports = function (Author) {
 
   const findAuthors = async (req, res) => {
     const token = req.headers['x-access-token'] || req.headers['authorization'];
-    const [page, pageSize ] = [ 1, 5]; //[req.query.page, req.query.pageSize] ||;    
-    const offset = page * pageSize;
-    const limit = offset + pageSize;
+    // const [page, pageSize ] = [ 1, 5]; //[req.query.page, req.query.pageSize] ||;    
+    // const offset = page * pageSize;
+    // const limit = offset + pageSize;
     try {
       await Authenticate.verifyToken(token);
-      const authors = await Author.findAll({limit, offset}).then((results) => results).catch(() => []);
+      const authors = await Author.findAll().then((results) => results).catch(() => []);
       res.status(200).send({
         message: 'found authors',
         authors
